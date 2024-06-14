@@ -36,6 +36,69 @@ async function run() {
     const scholarshipCollection=Database.collection('scholarship');
 
 
+    //====Scholarship APi
+    app.get('/scholarship', async (req, res) => {
+
+
+
+
+      const result = await scholarshipCollection.find().toArray();
+      res.send(result);
+    });
+
+    // app.get('/scholarships/:search',async(req,res)=>{
+    //    const search = req.params.search;
+    //    let searchQuery = {};
+    //    if(search){
+    //     searchQuery = {
+    //       $or: [
+    //           { scholarship_category:{$regex:search,$options:'i'} },  // Matches scholarship names containing the query substring.
+    //           { university_name: {$regex:search,$options:'i'} },   // Matches university names containing the query substring.
+    //           { degree_name: {$regex:search,$options:'i'}}        // Matches degree names containing the query substring.
+    //       ]
+    //    };
+
+
+    //    }
+    //    const result = await scholarshipCollection.find(searchQuery).toArray();
+    //    console.log(result)
+    //   res.send(result);
+      
+
+    // })
+    app.get('/scholarships/:search', async (req, res) => {
+      try {
+          const search = req.params.search;
+          let searchQuery = {};
+
+          // If there's a search term, construct the search query
+          if (search) {
+              searchQuery = {
+                  $or: [
+                      { scholarship_category: { $regex: search, $options: 'i' } },
+                      { university_name: { $regex: search, $options: 'i' } },
+                      { degree_name: { $regex: search, $options: 'i' } }
+                  ]
+              };
+          }
+
+          // Fetch results from the database based on the constructed search query
+          const result = await scholarshipCollection.find(searchQuery).toArray();
+
+          // Logging the result for debugging purposes
+          //console.log(result);
+          return res.send(result);
+
+         
+
+      } catch (error) {
+          // Handling any potential errors and sending an appropriate response
+          console.error(error);
+          res.status(500).json({ success: false, message: 'Internal Server Error' });
+      }
+  });
+
+
 
 
 
@@ -61,3 +124,14 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Scholars Server is sitting on port ${port}`);
 })
+
+
+
+// app.get('/jobs-str/:search',async(req,res)=>{
+
+//   const search = req.params.search;
+//   //console.log(search);
+//   const query = {name:{$regex:search,$options:'i'}  }
+//     const result = await jobCollection.find(query).toArray();
+//     res.send(result);
+// })
