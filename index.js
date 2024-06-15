@@ -13,7 +13,7 @@ const user=process.env.USER
 const pass=process.env.PASSWORD
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${user}:${pass}@cluster0.uctmuu5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -37,35 +37,32 @@ async function run() {
 
 
     //====Scholarship APi
-    app.get('/scholarship', async (req, res) => {
+app.get('/scholarship', async (req, res) => {
+      const page = parseInt(req.query._page) || 1;
+      const limit = parseInt(req.query._limit) || ITEMS_PER_PAGE;
+      console.log(page,limit)
+      const skip = (page - 1) * limit;
+      console.log("Page:", page, "Limit:", limit, "Skip:", skip);
+      try {
+        const cursor = scholarshipCollection.find();
+        const result = await cursor.skip(skip).limit(limit).toArray();
+        const totalItems = await scholarshipCollection.countDocuments();
 
+        res.json({
+            page,
+            limit,
+            totalItems,
+            totalPages: Math.ceil(totalItems / limit),
+            results: result
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 
-
-
-      const result = await scholarshipCollection.find().toArray();
-      res.send(result);
+          
     });
 
-    // app.get('/scholarships/:search',async(req,res)=>{
-    //    const search = req.params.search;
-    //    let searchQuery = {};
-    //    if(search){
-    //     searchQuery = {
-    //       $or: [
-    //           { scholarship_category:{$regex:search,$options:'i'} },  // Matches scholarship names containing the query substring.
-    //           { university_name: {$regex:search,$options:'i'} },   // Matches university names containing the query substring.
-    //           { degree_name: {$regex:search,$options:'i'}}        // Matches degree names containing the query substring.
-    //       ]
-    //    };
-
-
-    //    }
-    //    const result = await scholarshipCollection.find(searchQuery).toArray();
-    //    console.log(result)
-    //   res.send(result);
-      
-
-    // })
     app.get('/scholarships/:search', async (req, res) => {
       try {
           const search = req.params.search;
@@ -98,6 +95,16 @@ async function run() {
       }
   });
 
+  app.get('/scholarship/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) }
+    const result = await scholarshipCollection.findOne(query);
+    res.send(result);
+})
+
+
+ 
+
 
 
 
@@ -126,12 +133,3 @@ app.listen(port, () => {
 })
 
 
-
-// app.get('/jobs-str/:search',async(req,res)=>{
-
-//   const search = req.params.search;
-//   //console.log(search);
-//   const query = {name:{$regex:search,$options:'i'}  }
-//     const result = await jobCollection.find(query).toArray();
-//     res.send(result);
-// })
