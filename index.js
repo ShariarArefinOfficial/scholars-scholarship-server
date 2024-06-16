@@ -35,6 +35,7 @@ async function run() {
     //collections
     const scholarshipCollection=Database.collection('scholarship');
     const userCollection=Database.collection('users')
+    const applicationCollection=Database.collection('applications')
 
     //JWt Api
         // jwt related api
@@ -71,6 +72,8 @@ async function run() {
             }
             next();
           }
+
+
       
           // users related api
           app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
@@ -93,6 +96,8 @@ async function run() {
             }
             res.send({ admin });
           })
+
+      
       
           app.post('/users', async (req, res) => {
             const user = req.body;
@@ -118,6 +123,9 @@ async function run() {
             const result = await userCollection.updateOne(filter, updatedDoc);
             res.send(result);
           })
+
+
+          
       
           app.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
@@ -127,7 +135,20 @@ async function run() {
           })
 
 
-    //User api
+    //application api
+    
+       app.get('/applications', async (req, res) => {
+        const email = req.query.email;
+        const query = { email: email };
+        const result = await applicationCollection.find(query).toArray();
+        res.send(result);
+      });
+  
+      app.post('/applications', async (req, res) => {
+        const applicationItem = req.body;
+        const result = await applicationCollection.insertOne(applicationItem);
+        res.send(result);
+      });
 
 
     //====Scholarship APi
@@ -195,6 +216,28 @@ app.get('/scholarship', async (req, res) => {
     const result = await scholarshipCollection.findOne(query);
     res.send(result);
 })
+
+
+// Middleware to verify moderator
+const verifyModerator = async (req, res, next) => {
+  const email = req.decoded.email;
+  const query = { email };
+  const user = await userCollection.findOne(query);
+  const isModerator = user?.role === 'moderator';
+  if (!isModerator) {
+    return res.status(403).send({ message: 'Forbidden access' });
+  }
+  next();
+};
+
+// Update user role to moderator
+app.patch('/users/moderator/:id', verifyToken, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedDoc = { $set: { role: 'moderator' } };
+  const result = await userCollection.updateOne(filter, updatedDoc);
+  res.send(result);
+});
 
 
  
