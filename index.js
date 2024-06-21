@@ -86,9 +86,10 @@ async function run() {
    //=================Reviews
    app.get("/reviews", async (req, res) => {
     const email = req.query.email;
+   // console.log(email)
     let query = {};
     if (email) {
-      query = { email: email };
+      query = { user_email: email };
     }
     const result = await reviewsCollection.find(query).toArray();
     res.send(result);
@@ -100,6 +101,29 @@ async function run() {
     res.send(result);
   });
 
+
+app.patch('/reviews/:id', async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  const filter = { _id: new ObjectId(id) };
+  const updatedDoc = {
+    $set: {
+      university_name: updates.university_name,
+      comment: updates.comment,
+      reviewDate: updates.reviewDate
+    },
+  };
+
+  try {
+    const result = await reviewsCollection.updateOne(filter, updatedDoc);
+    if (result.matchedCount === 0) {
+      return res.status(404).send('Review not found');
+    }
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 
 
 
