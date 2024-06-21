@@ -125,6 +125,22 @@ app.patch('/reviews/:id', async (req, res) => {
   }
 });
 
+// Delete a review
+app.delete('/reviews/:id', async (req, res) => {
+  const { id } = req.params;
+  const filter = { _id: new ObjectId(id) };
+
+  try {
+    const result = await reviewsCollection.deleteOne(filter);
+    if (result.deletedCount === 0) {
+      return res.status(404).send('Review not found');
+    }
+    res.send({ message: 'Review deleted successfully' });
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 
 
 
