@@ -152,13 +152,18 @@ async function run() {
    //=================Reviews
    app.get("/reviews", async (req, res) => {
     const email = req.query.email;
-   // console.log(email)
+    console.log(email)
     let query = {};
     if (email) {
       query = { user_email: email };
-    }
-    const result = await reviewsCollection.find(query).toArray();
+      const result = await reviewsCollection.find(query).toArray();
     res.send(result);
+    }
+    else{
+      const result = await reviewsCollection.find().toArray();
+      res.send(result);
+    }
+    
   });
 
   app.post("/reviews", async (req, res) => {
@@ -305,6 +310,41 @@ app.delete('/reviews/:id', async (req, res) => {
        res.send(result);
     }
   );
+
+  app.patch("/applications/:id", async (req, res) => {
+    const item = req.body;
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    console.log(item.application_status,id)
+   if(item.feedback){
+    const updatedDoc = {
+      $set: {
+        feedback: item.feedback,
+       
+      },
+    };
+    const result = await applicationCollection.updateOne(filter, updatedDoc)
+    res.send(result);
+   }
+   if(item.application_status){
+    const updatedDoc = {
+      $set: {
+        application_status: item.application_status,
+       
+      },
+    };
+    const result = await applicationCollection.updateOne(filter, updatedDoc)
+    res.send(result);
+   }
+
+    
+    
+  });
+
+
+
+
+
 
     //====Scholarship APi
     app.get("/scholarship", async (req, res) => {
