@@ -63,87 +63,21 @@ async function run() {
       });
     };
 
-     // use verify admin after verifyToken
-     const verifyAdmin = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email: email };
-      const user = await userCollection.findOne(query);
-      const isAdmin = user?.role === "admin";
-      if (!isAdmin) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      next();
-    };
 
 
 
 
-      const verifyModerator = async (req, res, next) => {
-        const email = req.decoded.email;
-        const query = { email };
-        const user = await userCollection.findOne(query);
-        if (!user || user.role !== 'moderator') {
-          return res.status(403).send({ message: "Forbidden access" });
-        }
-        next();
-      };
-
-        // Middleware to verify admin or moderator
-    const verifyAdminOrModerator = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email };
-      const user = await userCollection.findOne(query);
-      if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
-        return res.status(403).send({ message: "Forbidden access" });
-      }
-      next();
-    };
-
-    app.get("/users/admin/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-
-      const query = { email: email };
-      const user = await userCollection.findOne(query);
-      let admin = false;
-      if (user) {
-        admin = user?.role === "admin";
-      }
-      res.send({ admin });
-    });
-      
-    // Update user role to moderator
-    app.patch(
-      "/users/moderator/:id",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const updatedDoc = { $set: { role: "moderator" } };
-        const result = await userCollection.updateOne(filter, updatedDoc);
-        res.send(result);
-      }
-    );
-    //====test
-    app.get("/users/moderator/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-
-      const query = { email: email };
-      const user = await userCollection.findOne(query);
-      let moderator = false;
-      if (user) {
-        moderator = user?.role === "moderator";
-      }
-      res.send({ moderator });
-    });
+      //  // Middleware to verify moderator
+      //  const verifyModerator = async (req, res, next) => {
+      //   const email = req.decoded.email;
+      //   const query = { email };
+      //   const user = await userCollection.findOne(query);
+      //   const isModerator = user?.role === "moderator";
+      //   if (!isModerator) {
+      //     return res.status(403).send({ message: "Forbidden access" });
+      //   }
+      //   next();
+      // };
 
 
 
@@ -222,16 +156,16 @@ app.delete('/reviews/:id', async (req, res) => {
 
 
     // use verify admin after verifyToken
-    // const verifyAdmin = async (req, res, next) => {
-    //   const email = req.decoded.email;
-    //   const query = { email: email };
-    //   const user = await userCollection.findOne(query);
-    //   const isAdmin = user?.role === "admin";
-    //   if (!isAdmin) {
-    //     return res.status(403).send({ message: "forbidden access" });
-    //   }
-    //   next();
-    // };
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === "admin";
+      if (!isAdmin) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
 
     // users related api
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
@@ -239,7 +173,21 @@ app.delete('/reviews/:id', async (req, res) => {
       res.send(result);
     });
 
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
 
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === "admin";
+      }
+      res.send({ admin });
+    });
 
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -399,12 +347,12 @@ app.delete('/reviews/:id', async (req, res) => {
       const result = await scholarshipCollection.findOne(query);
       res.send(result);
     });
-    app.post("/scholarship", verifyToken, verifyAdminOrModerator, async (req, res) => {
+    app.post("/scholarship", verifyToken, verifyAdmin, async (req, res) => {
       const item = req.body;
       const result = await scholarshipCollection.insertOne(item);
       res.send(result);
     });
-    app.delete("/scholarship/:id",verifyToken,verifyAdminOrModerator,async (req, res) => {
+    app.delete("/scholarship/:id",verifyToken,verifyAdmin,async (req, res) => {
         const id = req.params.id;
         console.log(id)
         const query = { _id: new ObjectId(id) };
@@ -415,6 +363,19 @@ app.delete('/reviews/:id', async (req, res) => {
 
  
 
+    // Update user role to moderator
+    app.patch(
+      "/users/moderator/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = { $set: { role: "moderator" } };
+        const result = await userCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      }
+    );
 
     await client.db("admin").command({ ping: 1 });
     // console.log("Pinged your deployment. You successfully connected to MongoDB!");
