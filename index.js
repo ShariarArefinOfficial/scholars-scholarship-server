@@ -151,6 +151,16 @@ async function run() {
       res.send(result);
     });
 
+
+    app.delete("/applications/:id",async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) };
+       const result = await applicationCollection.deleteOne(query);
+       res.send(result);
+    }
+  );
+
     //====Scholarship APi
     app.get("/scholarship", async (req, res) => {
       const page = parseInt(req.query._page);
