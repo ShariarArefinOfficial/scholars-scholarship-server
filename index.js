@@ -35,6 +35,7 @@ async function run() {
     const scholarshipCollection = Database.collection("scholarship");
     const userCollection = Database.collection("users");
     const applicationCollection = Database.collection("applications");
+    const reviewsCollection=Database.collection("reviews");
 
     //JWt Api
     // jwt related api
@@ -61,6 +62,58 @@ async function run() {
         next();
       });
     };
+
+
+
+
+
+      //  // Middleware to verify moderator
+      //  const verifyModerator = async (req, res, next) => {
+      //   const email = req.decoded.email;
+      //   const query = { email };
+      //   const user = await userCollection.findOne(query);
+      //   const isModerator = user?.role === "moderator";
+      //   if (!isModerator) {
+      //     return res.status(403).send({ message: "Forbidden access" });
+      //   }
+      //   next();
+      // };
+
+
+
+
+
+   //=================Reviews
+   app.get("/reviews", async (req, res) => {
+    const email = req.query.email;
+    let query = {};
+    if (email) {
+      query = { email: email };
+    }
+    const result = await reviewsCollection.find(query).toArray();
+    res.send(result);
+  });
+
+  app.post("/reviews", async (req, res) => {
+    const reviewItem = req.body;
+    const result = await reviewsCollection.insertOne(reviewItem);
+    res.send(result);
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // use verify admin after verifyToken
     const verifyAdmin = async (req, res, next) => {
@@ -268,17 +321,7 @@ async function run() {
       }
     );
 
-    // Middleware to verify moderator
-    const verifyModerator = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email };
-      const user = await userCollection.findOne(query);
-      const isModerator = user?.role === "moderator";
-      if (!isModerator) {
-        return res.status(403).send({ message: "Forbidden access" });
-      }
-      next();
-    };
+ 
 
     // Update user role to moderator
     app.patch(
