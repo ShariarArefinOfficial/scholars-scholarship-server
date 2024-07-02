@@ -460,49 +460,49 @@ app.delete('/reviews/:id', async (req, res) => {
 
 
 
-// payment intent
-app.post('/create-payment-intent', async (req, res) => {
-  const { price } = req.body;
-  const amount = parseInt(price * 100);
-  console.log(amount, 'amount inside the intent')
+// // payment intent
+// app.post('/create-payment-intent', async (req, res) => {
+//   const { price } = req.body;
+//   const amount = parseInt(price * 100);
+//   console.log(amount, 'amount inside the intent')
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: amount,
-    currency: 'usd',
-    payment_method_types: ['card']
-  });
+//   const paymentIntent = await stripe.paymentIntents.create({
+//     amount: amount,
+//     currency: 'usd',
+//     payment_method_types: ['card']
+//   });
 
-  res.send({
-    clientSecret: paymentIntent.client_secret
-  })
-});
+//   res.send({
+//     clientSecret: paymentIntent.client_secret
+//   })
+// });
 
 
-app.get('/payments/:email', verifyToken, async (req, res) => {
-  const query = { email: req.params.email }
-  if (req.params.email !== req.decoded.email) {
-    return res.status(403).send({ message: 'forbidden access' });
-  }
-  const result = await paymentCollection.find(query).toArray();
-  res.send(result);
-})
+// app.get('/payments/:email', verifyToken, async (req, res) => {
+//   const query = { email: req.params.email }
+//   if (req.params.email !== req.decoded.email) {
+//     return res.status(403).send({ message: 'forbidden access' });
+//   }
+//   const result = await paymentCollection.find(query).toArray();
+//   res.send(result);
+// })
 
-app.post('/payments', async (req, res) => {
-  const payment = req.body;
-  const paymentResult = await paymentCollection.insertOne(payment);
+// app.post('/payments', async (req, res) => {
+//   const payment = req.body;
+//   const paymentResult = await paymentCollection.insertOne(payment);
 
-  //  carefully delete each item from the cart
-  console.log('payment info', payment);
-  const query = {
-    _id: {
-      $in: payment.cartIds.map(id => new ObjectId(id))
-    }
-  };
+//   //  carefully delete each item from the cart
+//   console.log('payment info', payment);
+//   const query = {
+//     _id: {
+//       $in: payment.cartIds.map(id => new ObjectId(id))
+//     }
+//   };
 
-  const deleteResult = await cartCollection.deleteMany(query);
+//   const deleteResult = await cartCollection.deleteMany(query);
 
-  res.send({ paymentResult, deleteResult });
-})
+//   res.send({ paymentResult, deleteResult });
+// })
 
 
 
